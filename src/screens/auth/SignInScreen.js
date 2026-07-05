@@ -1,7 +1,29 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import { supabase } from '../../lib/supabase';
 
 export default function SignInScreen({ navigation }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignIn = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter email and password');
+      return;
+    }
+    
+    setLoading(true);
+    const response = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (response.error !== null) {
+      Alert.alert('Sign In Failed', response.error.message);
+    }
+    setLoading(false);
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -17,6 +39,8 @@ export default function SignInScreen({ navigation }) {
             placeholder="Enter your email" 
             keyboardType="email-address"
             autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
           />
         </View>
 
@@ -26,6 +50,8 @@ export default function SignInScreen({ navigation }) {
             style={styles.input} 
             placeholder="Enter your password" 
             secureTextEntry={true} 
+            value={password}
+            onChangeText={setPassword}
           />
         </View>
 
@@ -35,8 +61,16 @@ export default function SignInScreen({ navigation }) {
         </TouchableOpacity>
 
         {/* Sign In Button */}
-        <TouchableOpacity style={styles.button} onPress={() => {}}>
-          <Text style={styles.buttonText}>Sign In</Text>
+        <TouchableOpacity 
+          style={[styles.button, loading && styles.buttonDisabled]} 
+          onPress={handleSignIn}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Sign In</Text>
+          )}
         </TouchableOpacity>
 
         {/* Navigate to Sign Up */}
@@ -103,6 +137,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 24,
+  },
+  buttonDisabled: {
+    backgroundColor: '#93C5FD',
   },
   buttonText: {
     color: '#FFFFFF',
